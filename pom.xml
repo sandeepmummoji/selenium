@@ -1,0 +1,251 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>QuickTestWeb</groupId>
+	<artifactId>QuickTestWeb</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>QuickTest</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<jre.level>1.8</jre.level>
+		<jdk.level>1.8</jdk.level>
+		<timestamp>${maven.build.timestamp}</timestamp>
+		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
+		<basedir>.</basedir>
+		<report.dir>${basedir}\Reports</report.dir>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.9</version>
+		</dependency>
+		<!-- Adding TestNG for unit test support -->
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-server</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-htmlunit-driver</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		 <dependency>
+        <groupId>org.seleniumhq.selenium</groupId>
+        <artifactId>selenium-java</artifactId>
+        <version>LATEST</version>
+    </dependency>  
+		<!-- Adding Mongo Driver -->
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>2.12.1</version>
+		</dependency>
+		<dependency>
+			<groupId>io.appium</groupId>
+			<artifactId>java-client</artifactId>
+			<version>LATEST</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>3.0</version>
+		</dependency>
+	<dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5</version>
+    </dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<!-- Compiler plug-in -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.level}</source>
+					<target>${jdk.level}</target>
+				</configuration>
+				<version>2.3.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>CreateReportDir</id>
+						<phase>process-resources</phase>
+						<configuration>
+							<target>
+								<echo>Create and Copy Report Dir</echo>
+								<mkdir dir="${basedir}\ReportHistory\${maven.build.timestamp}" />
+								<copy todir="${basedir}\ReportHistory\${maven.build.timestamp}"
+									includeemptydirs="true" failonerror="false">
+									<fileset dir="${report.dir}" />
+								</copy>
+								<!-- <echo>delete Report Dir</echo>
+								<delete dir="${report.dir}" includeemptydirs="true" />  -->
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
+			<!-- Below plug-in is used to execute tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19</version>
+				<configuration>
+					<systemPropertyVariables>
+						<org.uncommons.reportng.escape-output>false</org.uncommons.reportng.escape-output>
+					</systemPropertyVariables>
+					<systemProperties>
+						<property>
+							<name>org.uncommons.reportng.title</name>
+							<value>GrabHouse Automation Test Report</value>
+						</property>
+					</systemProperties>
+					<properties>
+						<!-- Setting ReportNG listeners -->
+						<property>
+							<name>usedefaultlisteners</name>
+							<value>false</value>
+						</property>
+						<property>
+							<name>listener</name>
+							<value></value>
+						</property>
+					</properties>
+					<skipTests>false</skipTests>
+					<testFailureIgnore>true</testFailureIgnore>
+					<forkMode>once</forkMode>
+					<reportsDirectory>${report.dir}</reportsDirectory>
+					<suiteXmlFiles>
+						<suiteXmlFile>${basedir}/testNGxml/sanitySuiteForWeb.xml</suiteXmlFile>
+					</suiteXmlFiles>
+				</configuration>
+			</plugin>
+			 <plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.5.3</version>
+				<executions>
+					<execution>
+						<id>archive</id>
+						<phase>package</phase>
+						<goals>
+							<goal>assembly</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>${basedir}\assembly\zipAssembly.xml</descriptor>
+							</descriptors>
+							<tarLongFileMode>posix</tarLongFileMode>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>ch.fortysix</groupId>
+				<artifactId>maven-postman-plugin</artifactId>
+				<version>0.1.6</version>
+				<executions>
+					<execution>
+						<id>send_an_email</id>
+						<phase>install</phase>
+						<goals>
+							<goal>send-mail</goal>
+						</goals>
+						<inherited>true</inherited>
+						<configuration>
+							<mailhost>smtp.gmail.com</mailhost>
+							<mailport>465</mailport>
+							<mailssl>true</mailssl>
+							<mailAltConfig>true</mailAltConfig>
+							<mailuser>sandeepmummoji@gmail.com</mailuser>
+							<mailpassword></mailpassword>
+							<from>sandeepmummoji@gmail.com</from>
+							<receivers>
+								<receiver>sandeepmummoji@gmail.com</receiver>
+							</receivers>
+
+							<subject>Automation Report</subject>
+							<failonerror>true</failonerror>
+							<htmlMessage>
+                    <![CDATA[
+                    <p>Please Find attached Automation Report</p>
+                    <br>
+                    <p>Have a nice day.</p>
+                    ]]>
+							</htmlMessage>
+							<fileSets>
+								<fileSet>
+									<directory>${basedir}/target</directory>
+									<includes>
+										<include>QuickTestWeb-0.0.1-SNAPSHOT-bundle.tar</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin> 
+		</plugins>
+
+
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-antrun-plugin
+										</artifactId>
+										<versionRange>
+											[1.8,)
+										</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+</project>
